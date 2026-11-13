@@ -49,11 +49,12 @@ const DATA = {
     preset9: { 0: 'mcx', 4: 'umbreon' },
   },
 
-  // AI Card Grader: valores para la carta de ejemplo
+  // AI Card Grader (simulado)
   grader: {
-    sampleCardId: 'mcx',
-    sample: { Centering: 92, Corners: 88, Edges: 95, Surface: 90 },
+    cardBack: 'img/card-back.svg',            // reverso usado con "Use sample card"
     criteria: ['Centering', 'Corners', 'Edges', 'Surface'],
-    labels: { 10: 'GEM MINT', 9: 'MINT', 8: 'NM-MT', 7: 'NM' },
+    // Cuánto puede variar cada criterio respecto al estado general de la carta
+    spread: { Centering: 7, Corners: 5, Edges: 4, Surface: 5 },
+    labels: { 10: 'GEM MINT', 9: 'MINT', 8: 'NM-MT', 7: 'NM', 6: 'EX-MT', 5: 'EX', 4: 'VG-EX', 3: 'VG' },
   },
 };

@@ -21,8 +21,8 @@
   function renderSlot(side) {
     const slot = $(`#${side}Slot`), data = state[side];
     if (!data) { slot.innerHTML = emptySlotHTML(side); return; }
-    slot.innerHTML = (data.sample
-      ? cardImg(getCard(DATA.grader.sampleCardId), 'absolute inset-0 w-full h-full object-cover', false)
+    slot.innerHTML = (data.sampleId
+      ? cardImg(getCard(data.sampleId), 'absolute inset-0 w-full h-full object-cover', false)
       : `<img src="${data.src}" alt="${side} of your card" class="absolute inset-0 w-full h-full object-cover">`)
       + '<span class="absolute bottom-2 left-1/2 -translate-x-1/2 rounded-full bg-dark/80 text-white text-[10px] font-semibold px-2 py-0.5">Change</span>';
   }
@@ -72,7 +72,7 @@
   /* ---------- Imágenes ---------- */
   function setImage(side, value) {
     if (state.grading) return;
-    if (state[side]?.src) URL.revokeObjectURL(state[side].src); // libera memoria
+    if (state[side]?.src?.startsWith('blob:')) URL.revokeObjectURL(state[side].src); // libera memoria
     state[side] = value;
     renderSlot(side);
     resetBars();
@@ -81,24 +81,44 @@
   }
 
   /* ---------- Cálculo del resultado ---------- */
-  // Valores fijos para la carta de ejemplo; aleatorios (realistas) para imágenes propias
+  // Aleatorio pero realista: primero se decide el estado general de la carta
+  // (la mayoría de cartas que se envían a graduar están casi perfectas) y
+  // después cada criterio varía un poco alrededor de ese estado.
+  const between = (a, b) => a + Math.random() * (b - a);
   function getScores() {
-    if (state.front.sample) return { ...DATA.grader.sample };
-    return Object.fromEntries(criteria.map(c => [c, 80 + Math.round(Math.random() * 18)]));
+    const r = Math.random();
+    const base = r < .15 ? between(95, 99)    // pack fresh
+               : r < .55 ? between(90, 96)    // casi perfecta
+               : r < .85 ? between(84, 91)    // pequeños defectos
+               :           between(70, 85);   // jugada / con desgaste
+    return Object.fromEntries(criteria.map(c => {
+      const v = base + between(-1, 1) * DATA.grader.spread[c];
+      return [c, Math.max(50, Math.min(100, Math.round(v)))];
+    }));
   }
 
+  // Como en PSA, la nota la limita sobre todo el criterio más flojo
   function computeGrade(scores) {
-    const avg = Object.values(scores).reduce((a, b) => a + b, 0) / criteria.length;
-    return avg >= 95 ? 10 : avg >= 88 ? 9 : avg >= 80 ? 8 : 7;
+    const vals = Object.values(scores);
+    const avg = vals.reduce((a, b) => a + b, 0) / vals.length;
+    const overall = avg * .55 + Math.min(...vals) * .45;
+    const steps = [[96, 10], [91, 9], [86, 8], [80, 7], [74, 6], [68, 5], [62, 4]];
+    const grade = (steps.find(([min]) => overall >= min) || [0, 3])[1];
+    return { grade, overall };
   }
 
   function showResult(scores) {
-    const grade = computeGrade(scores);
+    const { grade, overall } = computeGrade(scores);
     const sorted = Object.entries(scores).sort((a, b) => b[1] - a[1]);
     const [best, worst] = [sorted[0], sorted[sorted.length - 1]];
     $('#gradeValue').textContent = grade;
     $('#gradeLabel').textContent = DATA.grader.labels[grade];
-    $('#gradeSummary').textContent = `Strongest point: ${best[0].toLowerCase()} (${best[1]} %). ${worst[0]} (${worst[1]} %) is what keeps it from a higher grade — worth checking before you submit it to PSA.`;
+    const score = `Overall score ${overall.toFixed(1).replace('.', ',')} / 100. `;
+    $('#gradeSummary').textContent = grade === 10
+      ? `${score}Every criterion is at ${worst[1]} % or higher — a strong Gem Mint candidate. Submit it to PSA with confidence.`
+      : grade >= 8
+        ? `${score}Strongest point: ${best[0].toLowerCase()} (${best[1]} %). ${worst[0]} (${worst[1]} %) is what keeps it from a higher grade — worth checking before you submit it to PSA.`
+        : `${score}${worst[0]} (${worst[1]} %) shows visible wear. Grading may not be worth the fee unless the card is valuable — consider keeping it raw.`;
     result.classList.remove('hidden', 'screen-enter');
     void result.offsetWidth;
     result.classList.add('screen-enter');
@@ -149,9 +169,16 @@
         e.target.value = '';
       });
     });
+    // Carta de ejemplo: una carta aleatoria de la colección (distinta de la anterior) + su reverso
+    let lastSampleId = null;
     $('#sampleBtn').addEventListener('click', () => {
-      setImage('front', { sample: true });
-      toast(`Sample card loaded: ${getCard(DATA.grader.sampleCardId).name}`, 'success');
+      if (state.grading) return;
+      const options = DATA.cards.filter(c => c.id !== lastSampleId);
+      const card = options[Math.floor(Math.random() * options.length)];
+      lastSampleId = card.id;
+      setImage('front', { sampleId: card.id });
+      setImage('back', { src: DATA.grader.cardBack });
+      toast(`Sample card loaded: ${card.name} (front & back)`, 'success');
     });
     gradeBtn.addEventListener('click', grade);
     $('#resetGrade').addEventListener('click', resetGrader);
