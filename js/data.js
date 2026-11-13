@@ -51,7 +51,7 @@ const DATA = {
 
   // AI Card Grader (simulado)
   grader: {
-    cardBack: 'img/card-back.svg',            // reverso usado con "Use sample card"
+    cardBack: 'img/card-back.png',            // reverso usado con "Use sample card"
     criteria: ['Centering', 'Corners', 'Edges', 'Surface'],
     // Cuánto puede variar cada criterio respecto al estado general de la carta
     spread: { Centering: 7, Corners: 5, Edges: 4, Surface: 5 },
