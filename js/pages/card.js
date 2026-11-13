@@ -4,18 +4,74 @@
    precio "Last sold", gráfico SVG de historial y ventas recientes.
    ================================================================== */
 (function () {
-  const card = getCard(DATA.detail.cardId);
+  /* ---------- Datos de la carta elegida ---------- */
+
+  // Generador pseudoaleatorio con semilla: cada carta tiene siempre "su" historial
+  function seededRandom(str) {
+    let h = 2166136261;
+    for (const ch of str) h = Math.imul(h ^ ch.charCodeAt(0), 16777619);
+    return () => {
+      h = (h + 0x6D2B79F5) | 0;
+      let t = Math.imul(h ^ (h >>> 15), h | 1);
+      t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+      return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+    };
+  }
+
+  // Historial de precios (Raw y PSA 10) y ventas recientes a partir del precio de la carta
+  function buildDetail(card) {
+    const rnd = seededRandom(card.id);
+    const between = (a, b) => a + rnd() * (b - a);
+    // 7 puntos que van de start·precio hasta el precio actual, con algo de ruido
+    const series = (end, start, noise) => Array.from({ length: 7 }, (_, i) =>
+      i === 6 ? end : Math.round(end * (start + (1 - start) * (i / 6)) * (1 + between(-noise, noise))));
+
+    const chart = {};
+    const starts = { '1M': between(.92, 1.04), '3M': between(.8, 1.03), '1Y': between(.55, 1.06) };
+    Object.entries(starts).forEach(([range, start]) => {
+      chart[range] = {
+        labels: DATA.chartLabels[range],
+        raw: series(card.price, start, .025),
+        psa: series(card.psa10, start * between(.96, 1.04), .02),
+      };
+    });
+
+    const { platforms } = DATA.detail;
+    const offset = Math.floor(rnd() * platforms.length);   // cada venta en una plataforma distinta
+    const sales = DATA.detail.saleDates.map((date, i) => {
+      const cond = i === 2 ? 'LP' : 'NM';
+      const f = (i === 0 ? 1 : between(.95, 1.02)) * (cond === 'LP' ? .88 : 1);
+      return { date, cond, platform: platforms[(offset + i) % platforms.length], price: Math.max(1, Math.round(card.price * f)) };
+    });
+
+    return { chart, sales, price30dAgo: chart['1M'].raw[0] };
+  }
+
+  // La carta se elige con ?id= (p. ej. card.html?id=umbreon); si no existe, la de por defecto
+  const requestedId = new URLSearchParams(location.search).get('id');
+  const card = getCard(requestedId) || getCard(DATA.detail.defaultId);
+  const detail = buildDetail(card);
   const holo = $('#holoCard'), actionsBtn = $('#actionsBtn'), actionsMenu = $('#actionsMenu');
 
   // Estado de esta página
-  const state = { lang: 0, cond: 0, price: DATA.detail.lastSold, range: '1M', chartShown: null };
+  const state = { lang: 0, cond: 0, price: card.price, range: '1M', chartShown: null };
 
   /* ---------- Información de la carta ---------- */
   function renderInfo() {
     holo.innerHTML = cardImg(card, 'w-full h-full object-cover rounded-2xl', false);
     $('#cardName').textContent = card.name;
-    $('#cardSet').textContent = `${card.set} · ${DATA.detail.number}`;
+    $('#cardSet').textContent = `${card.set} · ${card.number}`;
+    document.title = `${card.name} · CardDex`;
     renderInfoChips();
+  }
+
+  // Tira con el resto de cartas de la colección (cada una abre su ficha)
+  function renderMoreCards() {
+    $('#moreCards').innerHTML = DATA.cards.filter(c => c.id !== card.id).map(c => `
+      <a href="card.html?id=${c.id}" class="group shrink-0 snap-start w-[72px]" aria-label="${c.name}">
+        <span class="block aspect-[63/88] rounded-lg overflow-hidden bg-dark/5 shadow-soft transition duration-200 group-hover:-translate-y-1">${cardImg(c, 'w-full h-full object-cover')}</span>
+        <span class="mt-1 block text-[10px] text-dark/60 truncate">${c.name}</span>
+      </a>`).join('');
   }
 
   // Chips de idioma y estado
@@ -25,7 +81,7 @@
   }
 
   function renderSales() {
-    $('#salesList').innerHTML = DATA.detail.sales.map(s => `
+    $('#salesList').innerHTML = detail.sales.map(s => `
       <li class="flex items-center gap-3 px-4 py-3">
         <span class="w-9 h-9 rounded-xl bg-dark/5 grid place-items-center text-dark/60"><span class="w-4 h-4">${svgIcon('tag')}</span></span>
         <span class="flex-1 min-w-0"><span class="block text-sm font-semibold">${s.platform}</span><span class="block text-xs text-dark/55">${s.date} · ${s.cond}</span></span>
@@ -37,7 +93,7 @@
   function renderPrice(flash = false) {
     const el = $('#lastSold');
     el.textContent = fmtEUR(state.price);
-    const delta = (state.price / DATA.detail.price30dAgo - 1) * 100;
+    const delta = (state.price / detail.price30dAgo - 1) * 100;
     const up = delta >= 0;
     const badge = $('#priceDelta');
     badge.className = `inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-semibold ${up ? 'bg-emerald-400/15 text-emerald-300' : 'bg-red1/20 text-red-300'}`;
@@ -97,7 +153,7 @@
     setTimeout(() => {
       icon.classList.remove('animate-spin');
       state.price = Math.round(state.price * (1 + (Math.random() * 8 - 4) / 100));
-      Object.values(DATA.chart).forEach(r => { r.raw[r.raw.length - 1] = state.price; }); // último punto del gráfico
+      Object.values(detail.chart).forEach(r => { r.raw[r.raw.length - 1] = state.price; }); // último punto del gráfico
       renderPrice(true);
       drawChart(true);
       closeActions();
@@ -141,7 +197,14 @@
   }
 
   /* ---------- Gráfico SVG de historial de precio ---------- */
+  // En escritorio el gráfico es más ancho (más unidades en el viewBox) para que el texto no se agrande
   const CH = { W: 320, H: 200, l: 40, r: 18, t: 16, b: 28 };
+  const WIDE = window.matchMedia('(min-width: 1024px)');
+  function setChartSize() {
+    Object.assign(CH, WIDE.matches ? { W: 600, H: 260 } : { W: 320, H: 200 });
+    $('#chart').setAttribute('viewBox', `0 0 ${CH.W} ${CH.H}`);
+  }
+  WIDE.addEventListener('change', () => { setChartSize(); state.chartShown = null; drawChart(false); });
   const COLOR_RAW = '#191D32', COLOR_PSA = '#E70E02';
 
   // Curva suave (Catmull-Rom convertido a Bézier)
@@ -200,7 +263,7 @@
 
   // Anima el gráfico desde los valores actuales hasta los del rango elegido
   function drawChart(animate = true) {
-    const target = DATA.chart[state.range];
+    const target = detail.chart[state.range];
     $$('.range-btn').forEach(btn => {
       const on = btn.dataset.range === state.range;
       btn.classList.toggle('bg-red1', on);
@@ -232,8 +295,11 @@
 
   /* ---------- Inicio ---------- */
   renderInfo();
+  if (requestedId && !getCard(requestedId)) toast('Card not found — showing ' + card.name);
   renderPrice();
   renderSales();
+  renderMoreCards();
+  setChartSize();
   drawChart(false);
   initHolo();
   initActions();

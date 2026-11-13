@@ -1,23 +1,23 @@
 /* ==================================================================
    CardDex · data.js
-   DATOS DE EJEMPLO. Todo lo editable está aquí: cartas, precios,
-   ventas, series del gráfico y valores del grader.
+   DATOS DE EJEMPLO. Todo lo editable está aquí: cartas, precios
+   y valores del grader.
    Si añades una carpeta img/ con imágenes propias, cambia la propiedad
    "img" de cada carta por la ruta local (p. ej. "img/mcx.png").
    ================================================================== */
 const DATA = {
-  // Colección del usuario
+  // Colección del usuario. price = último precio Raw (NM); psa10 = precio graduado PSA 10
   cards: [
-    { id: 'mcx',       name: 'Mega Charizard X ex', set: 'Phantasmal Flames', hp: 360, type: 'fire',     price: 900,  img: 'https://images.pokemontcg.io/me2/125_hires.png' },
-    { id: 'umbreon',   name: 'Umbreon VMAX',        set: 'Evolving Skies',    hp: 310, type: 'dark',     price: 1450, img: 'https://images.pokemontcg.io/swsh7/215_hires.png' },
-    { id: 'mew',       name: 'Mew ex',              set: '151',               hp: 180, type: 'psychic',  price: 38,   img: 'https://images.pokemontcg.io/sv3pt5/151_hires.png' },
-    { id: 'charizard', name: 'Charizard',           set: 'Base Set',          hp: 120, type: 'fire',     price: 420,  img: 'https://images.pokemontcg.io/base1/4_hires.png' },
-    { id: 'blastoise', name: 'Blastoise',           set: 'Base Set',          hp: 100, type: 'water',    price: 160,  img: 'https://images.pokemontcg.io/base1/2_hires.png' },
-    { id: 'venusaur',  name: 'Venusaur',            set: 'Base Set',          hp: 100, type: 'psychic',  price: 140,  img: 'https://images.pokemontcg.io/base1/15_hires.png' },
-    { id: 'pikachu',   name: 'Pikachu',             set: 'Base Set',          hp: 40,  type: 'electric', price: 12,   img: 'https://images.pokemontcg.io/base1/58_hires.png' },
-    { id: 'mewtwo',    name: 'Mewtwo',              set: 'Base Set',          hp: 60,  type: 'psychic',  price: 75,   img: 'https://images.pokemontcg.io/base1/10_hires.png' },
-    { id: 'zapdos',    name: 'Zapdos',              set: 'Base Set',          hp: 90,  type: 'electric', price: 60,   img: 'https://images.pokemontcg.io/base1/16_hires.png' },
-    { id: 'raichu',    name: 'Raichu',              set: 'Base Set',          hp: 80,  type: 'electric', price: 55,   img: 'https://images.pokemontcg.io/base1/14_hires.png' },
+    { id: 'mcx',       name: 'Mega Charizard X ex', set: 'Phantasmal Flames', number: '125/094', hp: 360, type: 'fire',     price: 900,  psa10: 2140, img: 'https://images.pokemontcg.io/me2/125_hires.png' },
+    { id: 'umbreon',   name: 'Umbreon VMAX',        set: 'Evolving Skies',    number: '215/203', hp: 310, type: 'dark',     price: 1450, psa10: 3200, img: 'https://images.pokemontcg.io/swsh7/215_hires.png' },
+    { id: 'mew',       name: 'Mew ex',              set: '151',               number: '151/165', hp: 180, type: 'psychic',  price: 38,   psa10: 140,  img: 'https://images.pokemontcg.io/sv3pt5/151_hires.png' },
+    { id: 'charizard', name: 'Charizard',           set: 'Base Set',          number: '4/102',   hp: 120, type: 'fire',     price: 420,  psa10: 4800, img: 'https://images.pokemontcg.io/base1/4_hires.png' },
+    { id: 'blastoise', name: 'Blastoise',           set: 'Base Set',          number: '2/102',   hp: 100, type: 'water',    price: 160,  psa10: 1100, img: 'https://images.pokemontcg.io/base1/2_hires.png' },
+    { id: 'venusaur',  name: 'Venusaur',            set: 'Base Set',          number: '15/102',  hp: 100, type: 'psychic',  price: 140,  psa10: 950,  img: 'https://images.pokemontcg.io/base1/15_hires.png' },
+    { id: 'pikachu',   name: 'Pikachu',             set: 'Base Set',          number: '58/102',  hp: 40,  type: 'electric', price: 12,   psa10: 180,  img: 'https://images.pokemontcg.io/base1/58_hires.png' },
+    { id: 'mewtwo',    name: 'Mewtwo',              set: 'Base Set',          number: '10/102',  hp: 60,  type: 'psychic',  price: 75,   psa10: 600,  img: 'https://images.pokemontcg.io/base1/10_hires.png' },
+    { id: 'zapdos',    name: 'Zapdos',              set: 'Base Set',          number: '16/102',  hp: 90,  type: 'electric', price: 60,   psa10: 520,  img: 'https://images.pokemontcg.io/base1/16_hires.png' },
+    { id: 'raichu',    name: 'Raichu',              set: 'Base Set',          number: '14/102',  hp: 80,  type: 'electric', price: 55,   psa10: 480,  img: 'https://images.pokemontcg.io/base1/14_hires.png' },
   ],
 
   // Home: resumen de la colección
@@ -26,29 +26,22 @@ const DATA = {
     top: ['umbreon', 'mcx', 'charizard'],    // lista "Top of your collection"
   },
 
-  // Card Details
+  // Card Details: la carta se elige con ?id= en la URL (card.html?id=umbreon).
+  // El historial de precios y las ventas se generan a partir de price/psa10
+  // de cada carta (ver pages/card.js).
   detail: {
-    cardId: 'mcx',
-    number: '125/094',
-    lastSold: 900,
-    price30dAgo: 864,                         // para calcular la variación (+4,2 %)
+    defaultId:  'mcx',
     languages:  ['English', 'Japanese', 'Spanish', 'French'],
     conditions: ['NM', 'LP', 'MP'],
-    sales: [
-      { date: '10 Nov 2026', platform: 'Cardmarket', cond: 'NM', price: 900 },
-      { date: '07 Nov 2026', platform: 'eBay',       cond: 'NM', price: 885 },
-      { date: '02 Nov 2026', platform: 'TCGplayer',  cond: 'LP', price: 812 },
-    ],
+    platforms:  ['Cardmarket', 'eBay', 'TCGplayer'],
+    saleDates:  ['10 Nov 2026', '07 Nov 2026', '02 Nov 2026'],
   },
 
-  // Series del gráfico (mismo nº de puntos en cada rango para poder animar)
-  chart: {
-    '1M': { labels: ['13/10', '18/10', '23/10', '28/10', '2/11', '7/11', '12/11'],
-            raw: [842, 860, 851, 878, 869, 884, 900], psa: [1980, 2010, 1995, 2060, 2090, 2075, 2140] },
-    '3M': { labels: ['Aug', '', 'Sep', '', 'Oct', '', 'Nov'],
-            raw: [760, 790, 775, 820, 845, 872, 900], psa: [1750, 1820, 1800, 1900, 1960, 2050, 2140] },
-    '1Y': { labels: ['Nov', 'Jan', 'Mar', 'May', 'Jul', 'Sep', 'Nov'],
-            raw: [520, 580, 640, 610, 700, 810, 900], psa: [1250, 1400, 1520, 1480, 1700, 1950, 2140] },
+  // Etiquetas del eje X del gráfico (7 puntos por rango, para poder animar)
+  chartLabels: {
+    '1M': ['13/10', '18/10', '23/10', '28/10', '2/11', '7/11', '12/11'],
+    '3M': ['Aug', '', 'Sep', '', 'Oct', '', 'Nov'],
+    '1Y': ['Nov', 'Jan', 'Mar', 'May', 'Jul', 'Sep', 'Nov'],
   },
 
   // Binder Builder: cartas ya colocadas en la hoja de 9 al empezar (índice → id)
