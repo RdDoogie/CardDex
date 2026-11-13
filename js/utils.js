@@ -12,7 +12,6 @@ const $$ = (sel, ctx = document) => [...ctx.querySelectorAll(sel)];
 
 /* ---------- Preferencias del usuario ---------- */
 const REDUCED = window.matchMedia('(prefers-reduced-motion: reduce)').matches; // menos animaciones
-const DESKTOP = window.matchMedia('(min-width: 768px)');                      // mismo corte que "md:"
 
 /* Espera (más corta si se reducen animaciones) */
 const wait = ms => new Promise(r => setTimeout(r, REDUCED ? Math.min(ms, 150) : ms));

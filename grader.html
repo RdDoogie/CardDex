@@ -22,11 +22,14 @@
 
   <!-- El header, el menú lateral y el marco del teléfono los añade js/layout.js -->
   <main id="main" class="px-4 pt-5 pb-16" aria-labelledby="grader-title">
-    <h1 id="grader-title" class="font-display font-bold text-[28px] leading-tight">AI card grader</h1>
-    <p class="text-sm text-dark/60">Pre-grade your card before sending it to PSA.</p>
+    <h1 id="grader-title" class="font-display font-bold text-[28px] lg:text-4xl leading-tight">AI card grader</h1>
+    <p class="text-sm lg:text-base text-dark/60">Pre-grade your card before sending it to PSA.</p>
+
+    <!-- Escritorio: subida a la izquierda, análisis a la derecha -->
+    <div class="lg:mt-6 lg:grid lg:grid-cols-2 lg:gap-12 lg:items-start">
 
     <!-- Zona de subida -->
-    <section class="mt-4 rounded-2xl border-2 border-dashed border-dark/20 bg-white p-4" aria-labelledby="upload-title">
+    <section class="mt-4 lg:mt-0 lg:p-6 rounded-2xl border-2 border-dashed border-dark/20 bg-white p-4" aria-labelledby="upload-title">
       <h2 id="upload-title" class="text-center font-display font-semibold text-[15px] leading-snug">Upload your card front and back image</h2>
       <p class="text-center text-xs text-dark/50 mt-0.5">Images stay on your device — nothing is uploaded.</p>
       <div class="mt-4 grid grid-cols-2 gap-3">
@@ -48,8 +51,10 @@
       </button>
     </section>
 
+    <div class="lg:rounded-2xl lg:border lg:border-dark/10 lg:bg-white lg:p-6 lg:shadow-soft">
+    <h2 class="hidden lg:block font-display font-semibold text-lg">Analysis</h2>
     <!-- Barras de progreso (grader.js) -->
-    <section id="bars" class="mt-6 space-y-4" aria-label="Grading criteria"></section>
+    <section id="bars" class="mt-6 lg:mt-4 space-y-4" aria-label="Grading criteria"></section>
 
     <!-- Botón principal (desactivado hasta tener la imagen frontal) -->
     <button id="gradeBtn" type="button" disabled
@@ -69,6 +74,8 @@
       <p id="gradeSummary" class="relative mt-3 text-sm text-white/75 leading-relaxed"></p>
       <button id="resetGrade" type="button" class="relative mt-4 w-full rounded-xl bg-white text-dark py-3 text-sm font-semibold transition duration-200 hover:bg-yellow active:scale-[.98]">Grade another card</button>
     </section>
+    </div>
+    </div>
   </main>
 
   <!-- Scripts: datos → utilidades → estructura común → lógica de la página -->

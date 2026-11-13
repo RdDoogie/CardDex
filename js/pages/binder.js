@@ -89,7 +89,7 @@
       const placed = inSheet.has(c.id), sel = state.selected === c.id;
       return `
         <button type="button" draggable="${!placed}" data-card="${c.id}" aria-pressed="${sel}" aria-label="${c.name}${placed ? ' (already in this page)' : ''}"
-                class="relative shrink-0 snap-start w-[64px] aspect-[63/88] rounded-lg overflow-hidden bg-dark/5 shadow-soft transition duration-200
+                class="relative shrink-0 snap-start w-[64px] lg:w-[76px] aspect-[63/88] rounded-lg overflow-hidden bg-dark/5 shadow-soft transition duration-200
                        ${sel ? 'ring-[3px] ring-red1 -translate-y-1.5 shadow-card' : 'hover:-translate-y-1'} ${placed ? 'opacity-40' : ''} active:scale-95">
           ${cardImg(c, 'w-full h-full object-cover pointer-events-none')}
           ${placed ? `<span class="absolute inset-0 grid place-items-center bg-dark/40"><span class="w-6 h-6 rounded-full bg-white text-dark p-1">${svgIcon('check')}</span></span>` : ''}
@@ -99,7 +99,7 @@
     if (state.tab === 'images') {
       html = `
         <button type="button" id="addImageBtn" aria-label="Add image from your device"
-                class="shrink-0 snap-start w-[64px] aspect-[63/88] rounded-lg border-2 border-dashed border-dark/25 grid place-items-center text-dark/50 transition duration-200 hover:border-red1 hover:text-red1 active:scale-95">
+                class="shrink-0 snap-start w-[64px] lg:w-[76px] aspect-[63/88] rounded-lg border-2 border-dashed border-dark/25 grid place-items-center text-dark/50 transition duration-200 hover:border-red1 hover:text-red1 active:scale-95">
           <span class="flex flex-col items-center gap-1 text-[10px] font-semibold"><span class="w-5 h-5">${svgIcon('upload')}</span>Add</span>
         </button>` + html;
       if (!state.userImages.length) html += '<p class="self-center text-xs text-dark/50 pl-1 leading-snug">Add photos of your own cards<br>to place them in the binder.</p>';
